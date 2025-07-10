@@ -56,6 +56,11 @@ export default function WeelPage() {
 
   const { toast } = useToast();
   
+  // Define currentProfile early to avoid dependency issues
+  const currentProfile = useMemo(() => {
+    return profiles.find(p => p.id === currentProfileId);
+  }, [profiles, currentProfileId]);
+  
   const handlePageChange = useCallback((pageNumber: number) => {
     if (!currentProfile) return;
     
@@ -170,10 +175,6 @@ export default function WeelPage() {
         });
     }
   }, [profiles, currentProfileId, profilesInitialized, isMounted, toast]); // Added currentProfileId and isMounted
-
-  const currentProfile = useMemo(() => {
-    return profiles.find(p => p.id === currentProfileId);
-  }, [profiles, currentProfileId]);
 
   const executeButtonAction = useCallback(async (buttonConfig: ButtonConfig | null) => {
     if (!buttonConfig || !buttonConfig.action || buttonConfig.action.type === 'none') {

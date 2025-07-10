@@ -1,0 +1,122 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist&family=Geist+Mono&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: var(--font-geist-sans, Arial, sans-serif);
+}
+
+
+@layer base {
+  :root {
+    
+    --background: 270 8% 10%;   /* Darker Purple-ish Black */
+    --foreground: 270 10% 95%;  /* Cool Off-white, slightly purple tint */
+
+    --card: 270 8% 13%;       /* Slightly lighter than background */
+    --card-foreground: 270 10% 95%;
+
+    --popover: 270 8% 13%;    /* Same as card */
+    --popover-foreground: 270 10% 95%;
+
+    --primary: 260 65% 60%;    /* Vibrant Purple */
+    --primary-foreground: 260 100% 98%; /* White text on primary */
+
+    --secondary: 260 60% 50%;  /* Darker Purple */
+    --secondary-foreground: 260 100% 98%;
+
+    --muted: 270 8% 20%;      /* Muted Dark Purple */
+    --muted-foreground: 270 10% 65%; /* Muted cool gray with purple tint */
+
+    --accent: 140 60% 55%;     /* Pleasant Green */
+    --accent-foreground: 140 100% 10%;  /* Dark text on accent */
+
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 270 8% 18%;     /* Darker border with purple tint */
+    --input: 270 8% 18%;      /* Same as border */
+    --ring: 140 60% 55%;        /* Accent color for rings (Green) */
+    
+    --chart-1: 260 70% 65%; /* Purple variant */
+    --chart-2: 140 50% 60%;  /* Green variant */
+    --chart-3: 200 60% 60%; /* A complementary Blue */
+    --chart-4: 45 80% 60%;  /* A complementary Gold/Yellow */
+    --chart-5: 0 60% 65%;   /* A complementary Red/Orange */
+    
+    --radius: 0.5rem;
+
+    --sidebar-background: 270 8% 12%; /* Slightly different dark purple for sidebar */
+    --sidebar-foreground: 270 10% 90%;
+    --sidebar-primary: 140 60% 55%;    /* Accent (Green) for sidebar active */
+    --sidebar-primary-foreground: 140 100% 10%;
+    --sidebar-accent: 270 8% 18%;    /* Hover for sidebar items */
+    --sidebar-accent-foreground: 270 10% 90%;
+    --sidebar-border: 270 8% 22%;
+    --sidebar-ring: 140 60% 55%;
+  }
+
+  .dark {
+    --background: 270 8% 10%;   /* Darker Purple-ish Black */
+    --foreground: 270 10% 95%;  /* Cool Off-white, slightly purple tint */
+
+    --card: 270 8% 13%;       /* Slightly lighter than background */
+    --card-foreground: 270 10% 95%;
+
+    --popover: 270 8% 13%;    /* Same as card */
+    --popover-foreground: 270 10% 95%;
+
+    --primary: 260 65% 60%;    /* Vibrant Purple */
+    --primary-foreground: 260 100% 98%; /* White text on primary */
+
+    --secondary: 260 60% 50%;  /* Darker Purple */
+    --secondary-foreground: 260 100% 98%;
+
+    --muted: 270 8% 20%;      /* Muted Dark Purple */
+    --muted-foreground: 270 10% 65%; /* Muted cool gray with purple tint */
+
+    --accent: 140 60% 55%;     /* Pleasant Green */
+    --accent-foreground: 140 100% 10%;  /* Dark text on accent */
+
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 270 8% 18%;     /* Darker border with purple tint */
+    --input: 270 8% 18%;      /* Same as border */
+    --ring: 140 60% 55%;        /* Accent color for rings (Green) */
+
+    --chart-1: 260 70% 65%;
+    --chart-2: 140 50% 60%;
+    --chart-3: 200 60% 60%;
+    --chart-4: 45 80% 60%;
+    --chart-5: 0 60% 65%;
+
+    --sidebar-background: 270 8% 12%;
+    --sidebar-foreground: 270 10% 90%;
+    --sidebar-primary: 140 60% 55%;
+    --sidebar-primary-foreground: 140 100% 10%;
+    --sidebar-accent: 270 8% 18%;
+    --sidebar-accent-foreground: 270 10% 90%;
+    --sidebar-border: 270 8% 22%;
+    --sidebar-ring: 140 60% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Optional smooth scrollbar styling */
+.scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+.scrollbar::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--muted-foreground));
+  border-radius: 4px;
+}

@@ -31,24 +31,26 @@ export function PagesPanel({
   isAppAwareSwitchingEnabled = false, // Default to false for now
   className
 }: PagesPanelProps) {
+  // Early return if no profile to prevent rendering errors
   if (!currentProfile) {
     return null;
   }
 
+  // Safely get values with fallbacks
   const currentPage = currentProfile.currentPage || 1;
-  const totalPages = currentProfile.totalPages || 2; // Default to 2 pages
+  const totalPages = Math.max(currentProfile.totalPages || 1, 1); // Ensure at least 1 page
   const pinnedPages = currentProfile.pinnedPages || [1];
   const isCurrentPagePinned = pinnedPages.includes(currentPage);
   const maxPages = 10;
 
   const handlePageClick = (pageNumber: number) => {
-    if (pageNumber !== currentPage) {
+    if (pageNumber !== currentPage && pageNumber >= 1 && pageNumber <= totalPages) {
       onPageChange(pageNumber);
     }
   };
 
   const canDeletePage = (pageNumber: number) => {
-    return totalPages > 2 && !pinnedPages.includes(pageNumber);
+    return totalPages > 1 && !pinnedPages.includes(pageNumber);
   };
 
   const handleDeletePage = (e: React.MouseEvent, pageNumber: number) => {
@@ -59,7 +61,7 @@ export function PagesPanel({
   };
 
   const handleGlobalPinToggle = () => {
-    if (!isAppAwareSwitchingEnabled) return;
+    if (!isAppAwareSwitchingEnabled || !onPinPage) return;
     
     // Toggle pin state for current page
     onPinPage(currentPage, !isCurrentPagePinned);
@@ -110,7 +112,7 @@ export function PagesPanel({
 
         {/* Page Numbers */}
         <div className="flex items-center gap-1">
-          {Array.from({ length: Math.min(totalPages, maxPages) }, (_, i) => {
+          {Array.from({ length: Math.min(Math.max(totalPages, 1), maxPages) }, (_, i) => {
             const pageNumber = i + 1;
             const isCurrentPage = pageNumber === currentPage;
             const isPinned = pinnedPages.includes(pageNumber);

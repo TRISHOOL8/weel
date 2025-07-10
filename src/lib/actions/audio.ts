@@ -58,7 +58,16 @@ export class AudioHandler {
       // Stop existing audio for this button
       this.stopAudioForButton(buttonId);
 
-      const audio = new Audio(audioFile);
+      let audio: HTMLAudioElement;
+      try {
+        audio = new Audio(audioFile);
+      } catch (error) {
+        return {
+          success: false,
+          message: `Failed to create audio element: ${error instanceof Error ? error.message : 'Unknown error'}`
+        };
+      }
+      
       audio.volume = Math.max(0, Math.min(1, action.volume || 1.0));
       audio.loop = action.loop || false;
 
@@ -67,7 +76,15 @@ export class AudioHandler {
       this.globalAudioId = buttonId;
 
       // Play audio
-      await audio.play();
+      try {
+        await audio.play();
+      } catch (error) {
+        this.audioInstances.delete(buttonId);
+        return {
+          success: false,
+          message: `Failed to play audio: ${error instanceof Error ? error.message : 'Audio play failed'}`
+        };
+      }
 
       // Clean up when audio ends (if not looping)
       audio.addEventListener('ended', () => {

@@ -55,8 +55,25 @@ export default function WeelPage() {
   const [isAppAwareSwitchingEnabled, setIsAppAwareSwitchingEnabled] = useState(false); // Feature flag for app-aware switching
 
   const { toast } = useToast();
-  const actionExecutor = ActionExecutor.getInstance();
-  const appAwareSwitchingHandler = AppAwareSwitchingHandler.getInstance();
+  
+  // Initialize action handlers safely
+  const [actionExecutor] = useState(() => {
+    try {
+      return ActionExecutor.getInstance();
+    } catch (error) {
+      console.error('Failed to initialize ActionExecutor:', error);
+      return null;
+    }
+  });
+  
+  const [appAwareSwitchingHandler] = useState(() => {
+    try {
+      return AppAwareSwitchingHandler.getInstance();
+    } catch (error) {
+      console.error('Failed to initialize AppAwareSwitchingHandler:', error);
+      return null;
+    }
+  });
 
   // Effect for initial loading of profiles - runs once on mount
   useEffect(() => {
@@ -135,6 +152,29 @@ export default function WeelPage() {
     }
 
     try {
+      if (!actionExecutor) {
+        // Fallback to basic action execution
+        if (window.electronAPI?.performAction) {
+          const result = await window.electronAPI.performAction({
+            ...buttonConfig.action,
+            name: buttonConfig.label || 'Unnamed Action'
+          });
+          if (result.success && buttonConfig.action.type !== 'none') {
+            toast({ title: "Action Triggered", description: result.message });
+          } else if (!result.success) {
+            toast({ title: "Action Failed", description: result.message, variant: "destructive" });
+          }
+          return;
+        } else if (buttonConfig.action.type === 'open_url') {
+          window.open(buttonConfig.action.value, '_blank');
+          toast({ title: "URL Opened", description: `Opened ${buttonConfig.action.value}` });
+          return;
+        } else {
+          toast({ title: "Action Not Available", description: "Action system not initialized", variant: "destructive" });
+          return;
+        }
+      }
+      
       const result = await actionExecutor.executeAction(
         buttonConfig.action,
         buttonConfig.id,
@@ -257,7 +297,7 @@ export default function WeelPage() {
 
   // Effect for app-aware switching
   useEffect(() => {
-    if (!isAppAwareSwitchingEnabled || !currentProfile) return;
+    if (!isAppAwareSwitchingEnabled || !currentProfile || !appAwareSwitchingHandler) return;
 
     appAwareSwitchingHandler.initialize();
     
@@ -279,11 +319,11 @@ export default function WeelPage() {
     });
 
     return unsubscribe;
-  }, [isAppAwareSwitchingEnabled, currentProfile, handlePageChange, toast]);
+  }, [isAppAwareSwitchingEnabled, currentProfile, handlePageChange, toast, appAwareSwitchingHandler]);
 
   // Update profile with app-aware settings when toggling
   useEffect(() => {
-    if (!currentProfile) return;
+    if (!currentProfile || !appAwareSwitchingHandler) return;
     
     const updatedProfile = appAwareSwitchingHandler.toggleAppAwareSwitching(
       currentProfile, 
@@ -295,7 +335,7 @@ export default function WeelPage() {
         prevProfiles.map(p => (p.id === currentProfile.id ? updatedProfile : p))
       );
     }
-  }, [isAppAwareSwitchingEnabled, currentProfile]);
+  }, [isAppAwareSwitchingEnabled, currentProfile, appAwareSwitchingHandler]);
 
   const handleEditProfilesClick = () => setIsEditProfilesDialogOpen(true);
 

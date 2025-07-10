@@ -26,13 +26,18 @@ export class ActionExecutor {
   }
 
   constructor() {
-    this.multiActionHandler = MultiActionHandler.getInstance();
-    this.multiActionSwitchHandler = MultiActionSwitchHandler.getInstance();
-    this.randomActionHandler = RandomActionHandler.getInstance();
-    this.navigationHandler = NavigationHandler.getInstance();
-    this.audioHandler = AudioHandler.getInstance();
-    this.timerHandler = TimerHandler.getInstance();
-    this.systemHandler = SystemHandler.getInstance();
+    try {
+      this.multiActionHandler = MultiActionHandler.getInstance();
+      this.multiActionSwitchHandler = MultiActionSwitchHandler.getInstance();
+      this.randomActionHandler = RandomActionHandler.getInstance();
+      this.navigationHandler = NavigationHandler.getInstance();
+      this.audioHandler = AudioHandler.getInstance();
+      this.timerHandler = TimerHandler.getInstance();
+      this.systemHandler = SystemHandler.getInstance();
+    } catch (error) {
+      console.error('Error initializing action handlers:', error);
+      throw error;
+    }
   }
 
   async executeAction(

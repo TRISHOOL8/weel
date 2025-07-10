@@ -16,6 +16,12 @@ export class AppAwareSwitchingHandler {
    * Initialize app-aware switching monitoring
    */
   initialize(): void {
+    // Only initialize if we're in a browser environment
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      console.warn('App-aware switching requires browser environment');
+      return;
+    }
+    
     // In a real implementation, this would set up system-level app monitoring
     // For now, we'll simulate it with focus events and window title changes
     this.setupWebFallbackMonitoring();
@@ -145,6 +151,11 @@ export class AppAwareSwitchingHandler {
   }
 
   private setupWebFallbackMonitoring(): void {
+    // Ensure we're in browser environment
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return;
+    }
+    
     // Web fallback - monitor window focus and title changes
     let lastTitle = document.title;
     
@@ -157,23 +168,38 @@ export class AppAwareSwitchingHandler {
     };
 
     // Monitor title changes
-    const observer = new MutationObserver(checkForAppChange);
-    observer.observe(document.querySelector('title') || document.head, {
-      childList: true,
-      subtree: true
-    });
+    try {
+      const titleElement = document.querySelector('title');
+      if (titleElement) {
+        const observer = new MutationObserver(checkForAppChange);
+        observer.observe(titleElement, {
+          childList: true,
+          subtree: true
+        });
+      }
+    } catch (error) {
+      console.warn('Could not set up title monitoring:', error);
+    }
 
     // Monitor window focus
-    window.addEventListener('focus', () => {
-      checkForAppChange();
-    });
+    try {
+      window.addEventListener('focus', () => {
+        checkForAppChange();
+      });
+    } catch (error) {
+      console.warn('Could not set up focus monitoring:', error);
+    }
 
     // Monitor visibility changes
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) {
-        checkForAppChange();
-      }
-    });
+    try {
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+          checkForAppChange();
+        }
+      });
+    } catch (error) {
+      console.warn('Could not set up visibility monitoring:', error);
+    }
   }
 
   private notifyAppChange(appName: string): void {

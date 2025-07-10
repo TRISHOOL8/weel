@@ -155,9 +155,11 @@ export interface Profile {
   id: string;
   name: string;
   gridSize: { rows: number; cols: number };
-  buttons: (ButtonConfig | null)[]; 
+  buttons: (ButtonConfig | null)[];
   currentPage?: number;
   totalPages?: number;
+  pages?: { [pageNumber: number]: (ButtonConfig | null)[] }; // Store buttons for each page
+  pinnedPages?: number[]; // Track which pages are pinned
   parentProfile?: string; // For folder navigation
 }
 

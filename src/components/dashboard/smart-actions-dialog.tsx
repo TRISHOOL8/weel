@@ -26,10 +26,10 @@ import { Badge } from "@/components/ui/badge";
 interface SmartActionsDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onAddButtonFromAI: (config: ConfigureButtonAIOutput) => void;
+  onAIConfigurationResult: (config: ConfigureButtonAIOutput) => void;
 }
 
-export function SmartActionsDialog({ isOpen, onOpenChange, onAddButtonFromAI }: SmartActionsDialogProps) {
+export function SmartActionsDialog({ isOpen, onOpenChange, onAIConfigurationResult }: SmartActionsDialogProps) {
   const [runningApps, setRunningApps] = useState("");
   const [suggestions, setSuggestions] = useState<SuggestSmartActionsOutput>([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
@@ -100,7 +100,7 @@ export function SmartActionsDialog({ isOpen, onOpenChange, onAddButtonFromAI }: 
       setAiButtonConfig(result); 
 
       if (result) {
-        onAddButtonFromAI(result); 
+        onAIConfigurationResult(result); 
       } else {
          toast({
           title: "AI Task Note",
@@ -218,7 +218,7 @@ export function SmartActionsDialog({ isOpen, onOpenChange, onAddButtonFromAI }: 
                             
                               textColor: "#FFFFFF"
                             };
-                            onAddButtonFromAI(config);
+                            onAIConfigurationResult(config);
                           }}
                         >
                           Add to Grid

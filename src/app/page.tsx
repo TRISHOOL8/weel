@@ -7,6 +7,7 @@ import { ConfigurationPanel } from "@/components/dashboard/configuration-panel";
 import { SmartActionsDialog } from "@/components/dashboard/smart-actions-dialog";
 import { ActionsSidebar } from "@/components/dashboard/actions-sidebar";
 import { EditProfilesDialog } from "@/components/dashboard/edit-profiles-dialog";
+import { PagesPanel } from "@/components/dashboard/pages-panel";
 import type { Profile, ButtonConfig, PredefinedActionItem } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -30,6 +31,10 @@ const defaultInitialProfiles: Profile[] = [
     name: "My Weel Setup",
     gridSize: { rows: 3, cols: 3 },
     buttons: initialDefaultProfileButtons.slice(0, 9), // Ensure 9 buttons
+    currentPage: 1,
+    totalPages: 1,
+    pages: { 1: initialDefaultProfileButtons.slice(0, 9) },
+    pinnedPages: [1]
   }
 ];
 
@@ -236,6 +241,10 @@ export default function WeelPage() {
       name: newProfileName,
       gridSize: { rows: 3, cols: 3 },
       buttons: Array(3 * 3).fill(null),
+      currentPage: 1,
+      totalPages: 1,
+      pages: { 1: Array(3 * 3).fill(null) },
+      pinnedPages: [1]
     };
     setProfiles(prevProfiles => [...prevProfiles, newProfile]);
     setCurrentProfileId(newProfileId); // Make the new profile active
@@ -318,6 +327,149 @@ export default function WeelPage() {
     setIsConfigPanelOpen(false);
     setSelectedButtonIndex(null);
   };
+
+  const handlePageChange = useCallback((pageNumber: number) => {
+    if (!currentProfile) return;
+    
+    // Save current page buttons
+    const currentPage = currentProfile.currentPage || 1;
+    const updatedPages = {
+      ...currentProfile.pages,
+      [currentPage]: [...currentProfile.buttons]
+    };
+    
+    // Load new page buttons
+    const newPageButtons = updatedPages[pageNumber] || Array(currentProfile.gridSize.rows * currentProfile.gridSize.cols).fill(null);
+    
+    setProfiles(prevProfiles =>
+      prevProfiles.map(p => 
+        p.id === currentProfile.id 
+          ? { 
+              ...p, 
+              currentPage: pageNumber,
+              buttons: newPageButtons,
+              pages: updatedPages
+            }
+          : p
+      )
+    );
+    
+    // Clear selection when changing pages
+    setSelectedButtonIndex(null);
+    setIsConfigPanelOpen(false);
+    
+    toast({ title: "Page Changed", description: `Switched to page ${pageNumber}` });
+  }, [currentProfile, toast]);
+
+  const handleAddPage = useCallback(() => {
+    if (!currentProfile) return;
+    
+    const newPageNumber = (currentProfile.totalPages || 1) + 1;
+    const currentPage = currentProfile.currentPage || 1;
+    
+    // Save current page buttons
+    const updatedPages = {
+      ...currentProfile.pages,
+      [currentPage]: [...currentProfile.buttons],
+      [newPageNumber]: Array(currentProfile.gridSize.rows * currentProfile.gridSize.cols).fill(null)
+    };
+    
+    setProfiles(prevProfiles =>
+      prevProfiles.map(p => 
+        p.id === currentProfile.id 
+          ? { 
+              ...p, 
+              totalPages: newPageNumber,
+              pages: updatedPages
+            }
+          : p
+      )
+    );
+    
+    toast({ title: "Page Added", description: `Page ${newPageNumber} created` });
+  }, [currentProfile, toast]);
+
+  const handleDeletePage = useCallback((pageNumber: number) => {
+    if (!currentProfile || (currentProfile.totalPages || 1) <= 1) return;
+    
+    const currentPage = currentProfile.currentPage || 1;
+    const totalPages = currentProfile.totalPages || 1;
+    const pinnedPages = currentProfile.pinnedPages || [1];
+    
+    // Don't delete pinned pages
+    if (pinnedPages.includes(pageNumber)) {
+      toast({ title: "Cannot Delete", description: "Cannot delete a pinned page", variant: "destructive" });
+      return;
+    }
+    
+    // Create new pages object without the deleted page
+    const updatedPages = { ...currentProfile.pages };
+    delete updatedPages[pageNumber];
+    
+    // Renumber pages to fill gaps
+    const sortedPageNumbers = Object.keys(updatedPages)
+      .map(Number)
+      .sort((a, b) => a - b);
+    
+    const renumberedPages: { [key: number]: (ButtonConfig | null)[] } = {};
+    sortedPageNumbers.forEach((oldPageNum, index) => {
+      renumberedPages[index + 1] = updatedPages[oldPageNum];
+    });
+    
+    // Determine new current page
+    let newCurrentPage = currentPage;
+    if (pageNumber === currentPage) {
+      newCurrentPage = Math.min(currentPage, totalPages - 1);
+    } else if (pageNumber < currentPage) {
+      newCurrentPage = currentPage - 1;
+    }
+    
+    // Load buttons for new current page
+    const newPageButtons = renumberedPages[newCurrentPage] || Array(currentProfile.gridSize.rows * currentProfile.gridSize.cols).fill(null);
+    
+    setProfiles(prevProfiles =>
+      prevProfiles.map(p => 
+        p.id === currentProfile.id 
+          ? { 
+              ...p, 
+              totalPages: totalPages - 1,
+              currentPage: newCurrentPage,
+              buttons: newPageButtons,
+              pages: renumberedPages,
+              pinnedPages: pinnedPages.map(pin => pin > pageNumber ? pin - 1 : pin).filter(pin => pin <= totalPages - 1)
+            }
+          : p
+      )
+    );
+    
+    toast({ title: "Page Deleted", description: `Page ${pageNumber} has been deleted` });
+  }, [currentProfile, toast]);
+
+  const handlePinPage = useCallback((pageNumber: number, pinned: boolean) => {
+    if (!currentProfile) return;
+    
+    const currentPinnedPages = currentProfile.pinnedPages || [1];
+    let updatedPinnedPages: number[];
+    
+    if (pinned) {
+      updatedPinnedPages = [...currentPinnedPages, pageNumber];
+    } else {
+      updatedPinnedPages = currentPinnedPages.filter(p => p !== pageNumber);
+    }
+    
+    setProfiles(prevProfiles =>
+      prevProfiles.map(p => 
+        p.id === currentProfile.id 
+          ? { ...p, pinnedPages: updatedPinnedPages }
+          : p
+      )
+    );
+    
+    toast({ 
+      title: pinned ? "Page Pinned" : "Page Unpinned", 
+      description: `Page ${pageNumber} ${pinned ? 'pinned' : 'unpinned'}` 
+    });
+  }, [currentProfile, toast]);
 
   const handleAIConfigurationResult = (aiOutput: ConfigureButtonAIOutput) => {
     let activeProfileId = currentProfileId;
@@ -494,7 +646,7 @@ export default function WeelPage() {
         />
         <div className="relative z-10 flex flex-1 overflow-hidden">
           <ActionsSidebar />
-          <main className="flex-1 p-4 sm:p-6 lg:p-8 flex flex-col items-center overflow-y-auto">
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 flex flex-col items-center overflow-y-auto mr-20">
             {currentProfile ? (
               <SortableContext items={dndItems.map(item => item.id)} strategy={rectSortingStrategy}>
                 <div
@@ -522,6 +674,14 @@ export default function WeelPage() {
               </div>
             )}
           </main>
+          <PagesPanel
+            currentProfile={currentProfile}
+            onPageChange={handlePageChange}
+            onAddPage={handleAddPage}
+            onDeletePage={handleDeletePage}
+            onPinPage={handlePinPage}
+            className="fixed right-0 top-16 bottom-0"
+          />
         </div>
 
         {selectedButtonIndex !== null && currentProfile && (currentProfile.buttons[selectedButtonIndex] !== undefined || isConfigPanelOpen ) && (

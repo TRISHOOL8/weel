@@ -56,6 +56,39 @@ export default function WeelPage() {
 
   const { toast } = useToast();
   
+  const handlePageChange = useCallback((pageNumber: number) => {
+    if (!currentProfile) return;
+    
+    // Save current page buttons
+    const currentPage = currentProfile.currentPage || 1;
+    const updatedPages = {
+      ...currentProfile.pages,
+      [currentPage]: [...currentProfile.buttons]
+    };
+    
+    // Load new page buttons
+    const newPageButtons = updatedPages[pageNumber] || Array(currentProfile.gridSize.rows * currentProfile.gridSize.cols).fill(null);
+    
+    setProfiles(prevProfiles =>
+      prevProfiles.map(p => 
+        p.id === currentProfile.id 
+          ? { 
+              ...p, 
+              currentPage: pageNumber,
+              buttons: newPageButtons,
+              pages: updatedPages
+            }
+          : p
+      )
+    );
+    
+    // Clear selection when changing pages
+    setSelectedButtonIndex(null);
+    setIsConfigPanelOpen(false);
+    
+    toast({ title: "Page Changed", description: `Switched to page ${pageNumber}` });
+  }, [currentProfile, toast]);
+  
   // Initialize action handlers safely
   const [actionExecutor] = useState(() => {
     try {
@@ -366,39 +399,6 @@ export default function WeelPage() {
   };
 
   const canDeleteProfile = (profileId: string): boolean => profiles.length > 1;
-
-  const handlePageChange = useCallback((pageNumber: number) => {
-    if (!currentProfile) return;
-    
-    // Save current page buttons
-    const currentPage = currentProfile.currentPage || 1;
-    const updatedPages = {
-      ...currentProfile.pages,
-      [currentPage]: [...currentProfile.buttons]
-    };
-    
-    // Load new page buttons
-    const newPageButtons = updatedPages[pageNumber] || Array(currentProfile.gridSize.rows * currentProfile.gridSize.cols).fill(null);
-    
-    setProfiles(prevProfiles =>
-      prevProfiles.map(p => 
-        p.id === currentProfile.id 
-          ? { 
-              ...p, 
-              currentPage: pageNumber,
-              buttons: newPageButtons,
-              pages: updatedPages
-            }
-          : p
-      )
-    );
-    
-    // Clear selection when changing pages
-    setSelectedButtonIndex(null);
-    setIsConfigPanelOpen(false);
-    
-    toast({ title: "Page Changed", description: `Switched to page ${pageNumber}` });
-  }, [currentProfile, toast]);
 
   const handleUIButtonClick = (index: number) => {
     const buttonConfig = currentProfile?.buttons[index];

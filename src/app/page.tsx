@@ -94,6 +94,38 @@ export default function WeelPage() {
     toast({ title: "Page Changed", description: `Switched to page ${pageNumber}` });
   }, [currentProfile, toast]);
   
+  const handleProfileChange = useCallback((profileId: string) => {
+    const profileExists = profiles.some(p => p.id === profileId);
+    if (profileExists) {
+        setCurrentProfileId(profileId);
+        setSelectedButtonIndex(null);
+        setIsConfigPanelOpen(false);
+        const newProfileName = profiles.find(p=>p.id === profileId)?.name || "Unknown Profile";
+        toast({title: "Profile Changed", description: `Switched to ${newProfileName}`});
+    } else {
+        toast({title: "Profile Change Error", description: `Profile ID ${profileId} not found.`, variant: "destructive"});
+    }
+  }, [profiles, toast]);
+
+  const handleCreateProfile = useCallback((name?: string) => {
+    const newProfileId = `profile-${Date.now()}`;
+    const newProfileName = name || `New Profile ${profiles.length + 1}`;
+    const newProfile: Profile = {
+      id: newProfileId,
+      name: newProfileName,
+      gridSize: { rows: 3, cols: 3 },
+      buttons: Array(3 * 3).fill(null),
+      currentPage: 1,
+      totalPages: 1,
+      pages: { 1: Array(3 * 3).fill(null) },
+      pinnedPages: [1]
+    };
+    setProfiles(prevProfiles => [...prevProfiles, newProfile]);
+    setCurrentProfileId(newProfileId); // Make the new profile active
+    toast({ title: "Profile Created", description: `Switched to ${newProfile.name}.` });
+    return newProfileId; // Return new profile ID for AI handler
+  }, [profiles, toast]); // Ensure dependencies are correct
+
   // Initialize action handlers safely
   const [actionExecutor] = useState(() => {
     try {
@@ -298,38 +330,6 @@ export default function WeelPage() {
       return () => unsubscribe();
     }
   }, [isMounted, toast, esp32Status.connected]);
-
-  const handleProfileChange = useCallback((profileId: string) => {
-    const profileExists = profiles.some(p => p.id === profileId);
-    if (profileExists) {
-        setCurrentProfileId(profileId);
-        setSelectedButtonIndex(null);
-        setIsConfigPanelOpen(false);
-        const newProfileName = profiles.find(p=>p.id === profileId)?.name || "Unknown Profile";
-        toast({title: "Profile Changed", description: `Switched to ${newProfileName}`});
-    } else {
-        toast({title: "Profile Change Error", description: `Profile ID ${profileId} not found.`, variant: "destructive"});
-    }
-  }, [profiles, toast]);
-
-  const handleCreateProfile = useCallback((name?: string) => {
-    const newProfileId = `profile-${Date.now()}`;
-    const newProfileName = name || `New Profile ${profiles.length + 1}`;
-    const newProfile: Profile = {
-      id: newProfileId,
-      name: newProfileName,
-      gridSize: { rows: 3, cols: 3 },
-      buttons: Array(3 * 3).fill(null),
-      currentPage: 1,
-      totalPages: 1,
-      pages: { 1: Array(3 * 3).fill(null) },
-      pinnedPages: [1]
-    };
-    setProfiles(prevProfiles => [...prevProfiles, newProfile]);
-    setCurrentProfileId(newProfileId); // Make the new profile active
-    toast({ title: "Profile Created", description: `Switched to ${newProfile.name}.` });
-    return newProfileId; // Return new profile ID for AI handler
-  }, [profiles, toast]); // Ensure dependencies are correct
 
   // Effect for app-aware switching
   useEffect(() => {

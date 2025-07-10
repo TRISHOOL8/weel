@@ -646,42 +646,45 @@ export default function WeelPage() {
         />
         <div className="relative z-10 flex flex-1 overflow-hidden">
           <ActionsSidebar />
-          <main className="flex-1 p-4 sm:p-6 lg:p-8 flex flex-col items-center overflow-y-auto mr-20">
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 flex flex-col items-center overflow-y-auto">
             {currentProfile ? (
-              <SortableContext items={dndItems.map(item => item.id)} strategy={rectSortingStrategy}>
-                <div
-                  className="grid gap-3 p-4 bg-card/80 backdrop-blur-sm rounded-lg shadow-xl mt-8"
-                  style={{
-                    gridTemplateColumns: `repeat(${currentProfile.gridSize.cols}, minmax(90px, 130px))`,
-                    gridTemplateRows: `repeat(${currentProfile.gridSize.rows}, minmax(90px, 130px))`,
-                    aspectRatio: `${currentProfile.gridSize.cols} / ${currentProfile.gridSize.rows}`,
-                  }}
-                  data-ai-hint="control panel main grid droppable"
-                >
-                  {dndItems.map((item) => (
-                     <InteractiveButtonDnd
-                      key={item.id}
-                      id={item.id}
-                      config={item.config}
-                      onClick={() => handleUIButtonClick(item.index)}
-                    />
-                  ))}
+              <div className="flex flex-col items-center">
+                <SortableContext items={dndItems.map(item => item.id)} strategy={rectSortingStrategy}>
+                  <div
+                    className="grid gap-3 p-4 bg-card/80 backdrop-blur-sm rounded-lg shadow-xl mt-8"
+                    style={{
+                      gridTemplateColumns: `repeat(${currentProfile.gridSize.cols}, minmax(90px, 130px))`,
+                      gridTemplateRows: `repeat(${currentProfile.gridSize.rows}, minmax(90px, 130px))`,
+                      aspectRatio: `${currentProfile.gridSize.cols} / ${currentProfile.gridSize.rows}`,
+                    }}
+                    data-ai-hint="control panel main grid droppable"
+                  >
+                    {dndItems.map((item) => (
+                       <InteractiveButtonDnd
+                        key={item.id}
+                        id={item.id}
+                        config={item.config}
+                        onClick={() => handleUIButtonClick(item.index)}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+                
+                {/* Pages Panel - positioned below the grid */}
+                <PagesPanel
+                  currentProfile={currentProfile}
+                  onPageChange={handlePageChange}
+                  onAddPage={handleAddPage}
+                  onDeletePage={handleDeletePage}
+                  onPinPage={handlePinPage}
+                />
                 </div>
-              </SortableContext>
             ) : (
               <div className="flex items-center justify-center h-64 text-muted-foreground">
                  Create a profile to get started or select an existing one.
               </div>
             )}
           </main>
-          <PagesPanel
-            currentProfile={currentProfile}
-            onPageChange={handlePageChange}
-            onAddPage={handleAddPage}
-            onDeletePage={handleDeletePage}
-            onPinPage={handlePinPage}
-            className="fixed right-0 top-16 bottom-0"
-          />
         </div>
 
         {selectedButtonIndex !== null && currentProfile && (currentProfile.buttons[selectedButtonIndex] !== undefined || isConfigPanelOpen ) && (

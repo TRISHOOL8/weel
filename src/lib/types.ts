@@ -157,7 +157,7 @@ export interface Profile {
   gridSize: { rows: number; cols: number };
   buttons: (ButtonConfig | null)[];
   currentPage?: number;
-  totalPages?: number;
+  totalPages?: number; // Default to 2 pages
   pages?: { [pageNumber: number]: (ButtonConfig | null)[] }; // Store buttons for each page
   pinnedPages?: number[]; // Track which pages are pinned
   parentProfile?: string; // For folder navigation

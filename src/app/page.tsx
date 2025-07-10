@@ -17,6 +17,7 @@ import { InteractiveButtonDnd } from "@/components/dashboard/interactive-button-
 import { DraggableActionItem } from "@/components/dashboard/draggable-action-item";
 import { Loader2 } from "lucide-react";
 import { ActionExecutor } from "@/lib/actions/action-executor";
+import { AppAwareSwitchingHandler } from "@/lib/actions/app-aware-switching";
 import type { ConfigureButtonAIOutput, ConfigureButtonAIInput } from "@/ai/flows/configure-button-ai-flow"; // Updated import
 
 const initialDefaultProfileButtons: (ButtonConfig | null)[] = Array(3 * 3).fill(null);
@@ -51,9 +52,11 @@ export default function WeelPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [activeDragItem, setActiveDragItem] = useState<Active | null>(null);
   const [esp32Status, setEsp32Status] = useState<{connected: boolean; port?: string; error?: string}>({ connected: false });
+  const [isAppAwareSwitchingEnabled, setIsAppAwareSwitchingEnabled] = useState(false); // Feature flag for app-aware switching
 
   const { toast } = useToast();
   const actionExecutor = ActionExecutor.getInstance();
+  const appAwareSwitchingHandler = AppAwareSwitchingHandler.getInstance();
 
   // Effect for initial loading of profiles - runs once on mount
   useEffect(() => {
@@ -251,6 +254,48 @@ export default function WeelPage() {
     toast({ title: "Profile Created", description: `Switched to ${newProfile.name}.` });
     return newProfileId; // Return new profile ID for AI handler
   }, [profiles, toast]); // Ensure dependencies are correct
+
+  // Effect for app-aware switching
+  useEffect(() => {
+    if (!isAppAwareSwitchingEnabled || !currentProfile) return;
+
+    appAwareSwitchingHandler.initialize();
+    
+    const unsubscribe = appAwareSwitchingHandler.addAppChangeListener((appName) => {
+      const currentPage = currentProfile.currentPage || 1;
+      const switchResult = appAwareSwitchingHandler.shouldSwitchPage(
+        appName, 
+        currentProfile, 
+        currentPage
+      );
+
+      if (switchResult.shouldSwitch && switchResult.targetPage) {
+        handlePageChange(switchResult.targetPage);
+        toast({
+          title: "Auto-switched Page",
+          description: `Switched to page ${switchResult.targetPage} for ${appName}`,
+        });
+      }
+    });
+
+    return unsubscribe;
+  }, [isAppAwareSwitchingEnabled, currentProfile, handlePageChange, toast]);
+
+  // Update profile with app-aware settings when toggling
+  useEffect(() => {
+    if (!currentProfile) return;
+    
+    const updatedProfile = appAwareSwitchingHandler.toggleAppAwareSwitching(
+      currentProfile, 
+      isAppAwareSwitchingEnabled
+    );
+    
+    if (updatedProfile.appAwareSettings?.enabled !== currentProfile.appAwareSettings?.enabled) {
+      setProfiles(prevProfiles =>
+        prevProfiles.map(p => (p.id === currentProfile.id ? updatedProfile : p))
+      );
+    }
+  }, [isAppAwareSwitchingEnabled, currentProfile]);
 
   const handleEditProfilesClick = () => setIsEditProfilesDialogOpen(true);
 
@@ -643,6 +688,8 @@ export default function WeelPage() {
           currentUser={currentUser}
           authLoading={authLoading}
           esp32Status={esp32Status}
+          isAppAwareSwitchingEnabled={isAppAwareSwitchingEnabled}
+          onToggleAppAwareSwitching={setIsAppAwareSwitchingEnabled}
         />
         <div className="relative z-10 flex flex-1 overflow-hidden">
           <ActionsSidebar />
@@ -677,6 +724,7 @@ export default function WeelPage() {
                   onAddPage={handleAddPage}
                   onDeletePage={handleDeletePage}
                   onPinPage={handlePinPage}
+                  isAppAwareSwitchingEnabled={isAppAwareSwitchingEnabled}
                 />
                 </div>
             ) : (

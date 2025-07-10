@@ -160,6 +160,11 @@ export interface Profile {
   totalPages?: number; // Default to 2 pages
   pages?: { [pageNumber: number]: (ButtonConfig | null)[] }; // Store buttons for each page
   pinnedPages?: number[]; // Track which pages are pinned
+  appAwareSettings?: {
+    enabled: boolean;
+    appMappings?: { [appName: string]: number }; // Map app names to page numbers
+    lastActiveApp?: string;
+  };
   parentProfile?: string; // For folder navigation
 }
 

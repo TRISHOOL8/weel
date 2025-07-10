@@ -16,6 +16,8 @@ import { useState } from "react";
 import { AccountDialog } from "@/components/auth/account-dialog";
 import type { User } from "firebase/auth"; 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { WeelLogo } from "@/components/icons/weel-logo";
 
 
@@ -29,6 +31,8 @@ interface AppHeaderProps {
   currentUser: User | null; 
   authLoading: boolean; 
   esp32Status: { connected: boolean; port?: string; error?: string };
+  isAppAwareSwitchingEnabled?: boolean;
+  onToggleAppAwareSwitching?: (enabled: boolean) => void;
 }
 
 export function AppHeader({
@@ -41,6 +45,8 @@ export function AppHeader({
   currentUser, 
   authLoading, 
   esp32Status,
+  isAppAwareSwitchingEnabled = false,
+  onToggleAppAwareSwitching,
 }: AppHeaderProps) {
   const currentProfile = profiles.find(p => p.id === currentProfileId);
   const [isAccountDialogOpen, setIsAccountDialogOpen] = useState(false);
@@ -103,6 +109,38 @@ export function AppHeader({
               <Lightbulb className="mr-1 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5 text-accent" />
               AI Assistant
             </Button>
+
+            {/* App-Aware Switching Toggle */}
+            {onToggleAppAwareSwitching && (
+              <div className="flex items-center space-x-2 px-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="app-aware-switching"
+                        checked={isAppAwareSwitchingEnabled}
+                        onCheckedChange={onToggleAppAwareSwitching}
+                        className="data-[state=checked]:bg-accent"
+                      />
+                      <Label 
+                        htmlFor="app-aware-switching" 
+                        className="text-xs text-muted-foreground cursor-pointer"
+                      >
+                        App-Aware
+                      </Label>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      {isAppAwareSwitchingEnabled 
+                        ? "App-aware switching enabled - pages can be pinned to prevent automatic switching"
+                        : "Enable app-aware switching to automatically change pages based on active applications"
+                      }
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            )}
 
             <Button
               variant="ghost"

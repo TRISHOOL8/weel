@@ -18,6 +18,7 @@ interface PagesPanelProps {
   onAddPage: () => void;
   onDeletePage: (pageNumber: number) => void;
   onPinPage: (pageNumber: number, pinned: boolean) => void;
+  isAppAwareSwitchingEnabled?: boolean; // New prop to control pin functionality
   className?: string;
 }
 
@@ -27,6 +28,7 @@ export function PagesPanel({
   onAddPage,
   onDeletePage,
   onPinPage,
+  isAppAwareSwitchingEnabled = false, // Default to false for now
   className
 }: PagesPanelProps) {
   if (!currentProfile) {
@@ -36,6 +38,7 @@ export function PagesPanel({
   const currentPage = currentProfile.currentPage || 1;
   const totalPages = currentProfile.totalPages || 2; // Default to 2 pages
   const pinnedPages = currentProfile.pinnedPages || [1];
+  const isCurrentPagePinned = pinnedPages.includes(currentPage);
   const maxPages = 10;
 
   const handlePageClick = (pageNumber: number) => {
@@ -55,24 +58,52 @@ export function PagesPanel({
     }
   };
 
+  const handleGlobalPinToggle = () => {
+    if (!isAppAwareSwitchingEnabled) return;
+    
+    // Toggle pin state for current page
+    onPinPage(currentPage, !isCurrentPagePinned);
+  };
+
   return (
     <TooltipProvider>
       <div className={cn("flex items-center justify-center gap-2 py-4", className)}>
-        {/* Global Pin Icon - Placeholder for app-aware switching */}
+        {/* Global Pin Icon - Active when app-aware switching is enabled */}
         <div className="flex items-center gap-3 mr-2">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant="ghost"
+                variant={isCurrentPagePinned && isAppAwareSwitchingEnabled ? "default" : "ghost"}
                 size="sm"
-                className="h-8 w-8 p-0 rounded-full opacity-40 cursor-not-allowed"
-                disabled
+                className={cn(
+                  "h-8 w-8 p-0 rounded-full transition-all duration-200",
+                  isAppAwareSwitchingEnabled 
+                    ? "opacity-100 hover:scale-105" 
+                    : "opacity-40 cursor-not-allowed",
+                  isCurrentPagePinned && isAppAwareSwitchingEnabled && "shadow-md ring-2 ring-accent/20"
+                )}
+                disabled={!isAppAwareSwitchingEnabled}
+                onClick={handleGlobalPinToggle}
               >
-                <Pin className="h-4 w-4 text-muted-foreground" />
+                {isCurrentPagePinned && isAppAwareSwitchingEnabled ? (
+                  <Pin className="h-4 w-4 text-primary-foreground" />
+                ) : (
+                  <PinOff className={cn(
+                    "h-4 w-4",
+                    isAppAwareSwitchingEnabled ? "text-muted-foreground" : "text-muted-foreground/60"
+                  )} />
+                )}
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Pinning coming soon — lock a page during app-based switching</p>
+              <p>
+                {!isAppAwareSwitchingEnabled 
+                  ? "Pinning coming soon — lock a page during app-based switching"
+                  : isCurrentPagePinned 
+                    ? "Pinned: This page stays visible even when apps change"
+                    : "Pin this page to prevent switching when apps change"
+                }
+              </p>
             </TooltipContent>
           </Tooltip>
         </div>
@@ -95,18 +126,22 @@ export function PagesPanel({
                         "h-8 w-8 p-0 rounded-full text-sm font-medium relative",
                         isCurrentPage 
                           ? "bg-primary text-primary-foreground shadow-md" 
-                          : "hover:bg-accent text-muted-foreground hover:text-foreground"
+                          : "hover:bg-accent text-muted-foreground hover:text-foreground",
+                        isPinned && "ring-1 ring-accent/30"
                       )}
                       onClick={() => handlePageClick(pageNumber)}
                     >
                       {pageNumber}
                       {isPinned && (
-                        <Pin className="absolute -top-1 -right-1 h-2.5 w-2.5 text-accent" />
+                        <Pin className="absolute -top-1 -right-1 h-2.5 w-2.5 text-accent drop-shadow-sm" />
                       )}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Page {pageNumber}{isPinned ? " (Pinned)" : ""}</p>
+                    <p>
+                      Page {pageNumber}
+                      {isPinned ? " (Pinned - won't switch with apps)" : ""}
+                    </p>
                   </TooltipContent>
                 </Tooltip>
 

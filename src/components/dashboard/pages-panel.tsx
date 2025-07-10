@@ -39,7 +39,7 @@ export function PagesPanel({
   // Safely get values with fallbacks
   const currentPage = currentProfile.currentPage || 1;
   const totalPages = Math.max(currentProfile.totalPages || 1, 1); // Ensure at least 1 page
-  const pinnedPages = currentProfile.pinnedPages || [1];
+  const pinnedPages = currentProfile.pinnedPages || [];
   const isCurrentPagePinned = pinnedPages.includes(currentPage);
   const maxPages = 10;
 
@@ -50,7 +50,7 @@ export function PagesPanel({
   };
 
   const canDeletePage = (pageNumber: number) => {
-    return totalPages > 1 && !pinnedPages.includes(pageNumber);
+    return totalPages > 1 && pinnedPages.length > 0 && !pinnedPages.includes(pageNumber);
   };
 
   const handleDeletePage = (e: React.MouseEvent, pageNumber: number) => {

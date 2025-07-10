@@ -35,6 +35,11 @@ export class AppAwareSwitchingHandler {
     currentProfile: Profile, 
     currentPage: number
   ): { shouldSwitch: boolean; targetPage?: number; reason?: string } {
+    // Ensure we have a valid profile and settings
+    if (!currentProfile || !currentProfile.appAwareSettings) {
+      return { shouldSwitch: false, reason: 'No app-aware settings found' };
+    }
+    
     if (!currentProfile.appAwareSettings?.enabled) {
       return { shouldSwitch: false, reason: 'App-aware switching disabled' };
     }
@@ -47,7 +52,7 @@ export class AppAwareSwitchingHandler {
     const appMappings = currentProfile.appAwareSettings.appMappings || {};
     const targetPage = appMappings[activeApp.toLowerCase()];
 
-    if (targetPage && targetPage !== currentPage) {
+    if (targetPage && targetPage !== currentPage && targetPage >= 1) {
       return { 
         shouldSwitch: true, 
         targetPage, 

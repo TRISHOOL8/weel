@@ -6,7 +6,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { 
   Plus, 
   Pin, 
-  X
+  X,
+  PinOff
 } from "lucide-react";
 import type { Profile } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -57,6 +58,25 @@ export function PagesPanel({
   return (
     <TooltipProvider>
       <div className={cn("flex items-center justify-center gap-2 py-4", className)}>
+        {/* Global Pin Icon - Placeholder for app-aware switching */}
+        <div className="flex items-center gap-3 mr-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 rounded-full opacity-40 cursor-not-allowed"
+                disabled
+              >
+                <Pin className="h-4 w-4 text-muted-foreground" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Pinning coming soon — lock a page during app-based switching</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+
         {/* Page Numbers */}
         <div className="flex items-center gap-1">
           {Array.from({ length: Math.min(totalPages, maxPages) }, (_, i) => {

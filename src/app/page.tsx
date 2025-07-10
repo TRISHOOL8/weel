@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { AppHeader } from "@/components/layout/header";
 import { ConfigurationPanel } from "@/components/dashboard/configuration-panel";
 import { SmartActionsDialog } from "@/components/dashboard/smart-actions-dialog";
@@ -171,7 +171,9 @@ export default function WeelPage() {
     }
   }, [profiles, currentProfileId, profilesInitialized, isMounted, toast]); // Added currentProfileId and isMounted
 
-  const currentProfile = profiles.find(p => p.id === currentProfileId);
+  const currentProfile = useMemo(() => {
+    return profiles.find(p => p.id === currentProfileId);
+  }, [profiles, currentProfileId]);
 
   const executeButtonAction = useCallback(async (buttonConfig: ButtonConfig | null) => {
     if (!buttonConfig || !buttonConfig.action || buttonConfig.action.type === 'none') {

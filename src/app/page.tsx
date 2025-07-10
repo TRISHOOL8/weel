@@ -256,7 +256,7 @@ export default function WeelPage() {
         variant: "destructive",
       });
     }
-  }, [toast]);
+  }, [actionExecutor, currentProfile, profiles, handleProfileChange, handleCreateProfile, toast]);
 
   const handleHardwareButtonPress = useCallback((buttonIndex: number) => {
     const activeProfile = profiles.find(p => p.id === currentProfileId);

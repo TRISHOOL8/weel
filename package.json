@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit",
     "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
     "electron:build:next": "next build",
-    "postinstall": "electron-builder install-app-deps"
+    "postinstall": "bash -c \"electron-builder install-app-deps\""
   },
 
 

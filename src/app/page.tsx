@@ -15,6 +15,7 @@ import { SortableContext, arrayMove, rectSortingStrategy } from '@dnd-kit/sortab
 import { InteractiveButtonDnd } from "@/components/dashboard/interactive-button-dnd";
 import { DraggableActionItem } from "@/components/dashboard/draggable-action-item";
 import { Loader2 } from "lucide-react";
+import { ActionExecutor } from "@/lib/actions/action-executor";
 import type { ConfigureButtonAIOutput, ConfigureButtonAIInput } from "@/ai/flows/configure-button-ai-flow"; // Updated import
 
 const initialDefaultProfileButtons: (ButtonConfig | null)[] = Array(3 * 3).fill(null);
@@ -47,6 +48,7 @@ export default function WeelPage() {
   const [esp32Status, setEsp32Status] = useState<{connected: boolean; port?: string; error?: string}>({ connected: false });
 
   const { toast } = useToast();
+  const actionExecutor = ActionExecutor.getInstance();
 
   // Effect for initial loading of profiles - runs once on mount
   useEffect(() => {
@@ -123,31 +125,54 @@ export default function WeelPage() {
       }
       return;
     }
-    if (window.electronAPI && window.electronAPI.performAction) {
-      try {
-        const result = await window.electronAPI.performAction({
-          ...buttonConfig.action,
-          name: buttonConfig.label || 'Unnamed Action'
-        });
-        if (result.success && buttonConfig.action.type !== 'none') {
-             toast({ title: "Action Triggered", description: result.message });
-        } else if (!result.success) {
-             toast({ title: "Action Failed", description: result.message, variant: "destructive" });
+
+    try {
+      const result = await actionExecutor.executeAction(
+        buttonConfig.action,
+        buttonConfig.id,
+        {
+          currentProfile,
+          profiles,
+          onProfileChange: handleProfileChange,
+          onCreateProfile: handleCreateProfile,
+          updateProfile: (profileId, updates) => {
+            setProfiles(prevProfiles =>
+              prevProfiles.map(p => (p.id === profileId ? { ...p, ...updates } : p))
+            );
+          },
+          updateButton: (buttonId, updates) => {
+            setProfiles(prevProfiles =>
+              prevProfiles.map(profile => ({
+                ...profile,
+                buttons: profile.buttons.map(btn => 
+                  btn?.id === buttonId ? { ...btn, ...updates } : btn
+                )
+              }))
+            );
+          },
+          updateAction: (updatedAction) => {
+            setProfiles(prevProfiles =>
+              prevProfiles.map(profile => ({
+                ...profile,
+                buttons: profile.buttons.map(btn => 
+                  btn?.id === buttonConfig.id ? { ...btn, action: updatedAction } : btn
+                )
+              }))
+            );
+          }
         }
-      } catch (error) {
-        toast({
-          title: "IPC Error",
-          description: `Failed to communicate with the main process: ${error instanceof Error ? error.message : String(error)}`,
-          variant: "destructive",
-        });
+      );
+
+      if (result.success && buttonConfig.action.type !== 'none') {
+        toast({ title: "Action Triggered", description: result.message });
+      } else if (!result.success) {
+        toast({ title: "Action Failed", description: result.message, variant: "destructive" });
       }
-    } else if (buttonConfig.action.type === 'open_url') {
-      window.open(buttonConfig.action.value, '_blank');
-      toast({ title: "URL Opened (Web Fallback)", description: `Opened ${buttonConfig.action.value} in a new tab.` });
-    } else if (buttonConfig.action.type !== 'none') {
+    } catch (error) {
       toast({
-        title: "Desktop Action (Web Preview)",
-        description: `Action: ${buttonConfig.label || 'Button'} (${buttonConfig.action.type}). Full execution requires the desktop app.`,
+        title: "Action Error",
+        description: `Failed to execute action: ${error instanceof Error ? error.message : String(error)}`,
+        variant: "destructive",
       });
     }
   }, [toast]);
